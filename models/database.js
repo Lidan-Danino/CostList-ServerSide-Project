@@ -136,7 +136,7 @@ const Report = mongoose.model("Report", computedReportsSchema);
 
 // Create a new User instance
 const user = new User({
-  id: "123123",
+  userID: "123123",
   firstName: "Moshe",
   lastName: "Israeli",
   birthday: new Date(1990, 1, 10),
@@ -145,7 +145,7 @@ const user = new User({
 // Function to create a new User if they do not already exist
 async function createUserIfNotExist(user) {
   // Check if a User with the same ID already exists
-  const existUser = await User.findOne({ id: user.id });
+  const existUser = await User.findOne({ userID: user.userID });
   // Create the new User if they do not already exist
   if (existUser === null) {
     const newUser = await User.create(user);
