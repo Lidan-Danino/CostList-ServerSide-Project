@@ -21,8 +21,8 @@ enumCategory = [
 let crypto = require("crypto");
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", true);
-const connection =
-  "mongodb+srv://lidan05463:lidan12345@cluster0.e1xynie.mongodb.net/";
+const connection = //FinalProject?retryWrites=true&w=majority";
+  "mongodb+srv://lidan05463:lidan12345@cluster0.e1xynie.mongodb.net/COSTLIST?retryWrites=true&w=majority";
 mongoose.connect(connection, { useNewUrlParser: true });
 const db = mongoose.connection;
 // Logging any errors that occur when connecting to the database.
