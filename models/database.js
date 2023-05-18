@@ -36,7 +36,7 @@ db.once("open", () => {
 
 // Creating schemas for the User, Costs and Reports collections.
 const usersSchema = new mongoose.Schema(
-  { id: String, firstName: String, lastName: String, birthday: Date },
+  { userID: String, firstName: String, lastName: String, birthday: Date },
   { versionKey: false }
 );
 
@@ -105,7 +105,7 @@ const costsSchema = new mongoose.Schema(
       min: validYear.min,
       max: validYear.max,
     },
-    id: {
+    userID: {
       type: String,
       unique: true,
       default: () => {
