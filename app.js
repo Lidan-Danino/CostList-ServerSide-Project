@@ -65,6 +65,7 @@ app.use("/", indexRouter);
 
 // Route for adding new costs
 app.use("/addcost/", function (req, res) {
+  console.log();
   // Wrapping the add cost logic in a Promise
   new Promise(async (resolve, reject) => {
     try {
