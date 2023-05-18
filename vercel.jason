@@ -1,12 +1,4 @@
 {
-<<<<<<< HEAD
-  "version": 2,
-  "builds": [{ "src": "index.js", "use": "@vercel/node" }]
-}
-{
-    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-}
-=======
     "version": 2,
     "builds": [
       {
@@ -20,5 +12,5 @@
         "dest": "server.js"
       }
     ]
-  }
->>>>>>> 027b2eff7f943ea0372c1040354105854f356740
+}
+
