@@ -10,7 +10,6 @@ const logger = require("morgan");
 
 // Importing the database connection
 require("./models/database");
-
 // Importing the router modules
 const indexRouter = require("./routes/index");
 const aboutRouter = require("./routes/about");
@@ -21,9 +20,9 @@ const {
   createNewReport,
   Cost,
   Report,
+  enumCategory,
+  User,
 } = require("./models/database");
-const { model } = require("mongoose");
-const { log } = require("debug");
 
 // Initializing the express app
 const app = express();
@@ -36,21 +35,14 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 
 // Initializing the arrays to store cost data for different categories
-const food = [];
-const transportation = [];
-const health = [];
-const housing = [];
-const sport = [];
-const education = [];
-const other = [];
 const resultArray = {
-  food: food,
-  transportation: transportation,
-  health: health,
-  housing: housing,
-  sport: sport,
-  education: education,
-  other: other,
+  food: [],
+  transportation: [],
+  health: [],
+  housing: [],
+  sport: [],
+  education: [],
+  other: [],
 };
 
 // Middleware setup
@@ -65,13 +57,23 @@ app.use("/", indexRouter);
 
 // Route for adding new costs
 app.use("/addcost/", function (req, res) {
-  console.log();
   // Wrapping the add cost logic in a Promise
   new Promise(async (resolve, reject) => {
     try {
+      const category = req.body.category;
+      // Check if the category is valid
+      if (!enumCategory.includes(category)) {
+        throw new Error("Invalid category");
+      }
+      const user_id = req.body.user_id;
+      const existingUser = await User.findOne({ id: user_id });
+      if (!existingUser) {
+        throw new Error("User does not exist");
+      }
+
       // Calling the createNewCost function to add a new cost
       await createNewCost(
-        req.body.userID,
+        req.body.user_id,
         req.body.day,
         req.body.month,
         req.body.year,
@@ -80,14 +82,14 @@ app.use("/addcost/", function (req, res) {
         req.body.sum
       );
       // Resolving the promise with a success message
-      resolve({ message: "Cost added Successfully", status: 201 });
+      resolve("Cost added successfully");
     } catch (e) {
       // Rejecting the promise with an error message
-      reject({ error: `${e} Invalid request`, status: 500 });
+      reject(e.message);
     }
   })
-    .then((result) => res.status(result.status).json(result.message))
-    .catch((error) => res.status(error.status).json(error.error));
+    .then((message) => res.json({ message }))
+    .catch((error) => res.status(400).json({ error }));
 });
 
 // Route for getting the developers details
@@ -102,7 +104,7 @@ app.use("/report/", function (req, res) {
       result = {};
     splitUrl(q, result);
     let resultComputed = await Report.find({
-      userID: result.userID,
+      user_id: result.user_id,
       month: result.month,
       year: result.year,
     });
@@ -116,96 +118,46 @@ app.use("/report/", function (req, res) {
           sum: doc.sum,
         })
       );
-      resolve({ resultArray, status: 200 });
+      resolve({ resultArray });
     } else {
       let resultMatch = await Cost.find({
-        userID: result.userID,
+        user_id: result.user_id,
         month: result.month,
         year: result.year,
       });
-      // If no report exists, match with costs
-      resultMatch.map((doc) =>
-        resultArray[doc.category].push({
-          day: doc.day,
-          description: doc.description,
-          sum: doc.sum,
-        })
-      );
-      try {
-        // Validate the month and year
-        monthValidate(result.month);
-        yearValidate(result.year);
-        // Create a new report
-        resultMatch.map((doc) => {
-          createNewReport(
-            doc.userID,
-            doc.day,
-            doc.month,
-            doc.year,
-            doc.description,
-            doc.category,
-            doc.sum
-          );
-        });
-        resolve({ resultArray, status: 200 });
-      } catch (err) {
-        // Return error if invalid
-        reject({ error: `${err} Invalid request`, status: 500 });
+      // Check if a cost with the given parameters exists
+      if (resultMatch[0] != undefined) {
+        console.log("Match result");
+        resultMatch.map((doc) =>
+          resultArray[doc.category].push({
+            day: doc.day,
+            description: doc.description,
+            sum: doc.sum,
+          })
+        );
+        resolve({ resultArray });
+      } else {
+        console.log("Empty result");
+        resolve({ resultArray });
       }
     }
   })
-    .then((result) => res.status(result.status).json(resultArray))
-    .catch((error) => res.status(error.status).json(error.error));
-  clearArrays();
+    .then((data) => res.json(data))
+    .catch((error) => res.status(400).json({ error }));
 });
 
-// Function to split the URL
-function splitUrl(url, result) {
-  if (url.length >= 2) {
-    // Split the URL by '&' and add each parameter to the result object
-    url[1].split("&").forEach((item) => {
-      try {
-        result[item.split("=")[0]] = item.split("=")[1];
-      } catch (e) {
-        result[item.split("=")[0]] = "";
-      }
-    });
-  }
-}
-
-// Function to validate the month
-function monthValidate(currentMonth) {
-  if (!(currentMonth >= 1 && currentMonth <= 12)) {
-    throw new Error("Month not valid");
-  }
-}
-
-// Function to validate the year
-function yearValidate(currentYear) {
-  if (!(currentYear >= 1900 && currentYear <= 2100)) {
-    throw new Error("Year not valid");
-  }
-}
-
-// Function to clear the result arrays
-function clearArrays() {
-  for (const array in resultArray) {
-    resultArray[array].length = 0;
-  }
-}
-
-// catch 404 and forward to error handler
+// Catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
 });
 
-// error handler
+// Error handler
 app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
+  // Set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
-  // render the error page
+  // Render the error page
   res.status(err.status || 500);
   res.render("error");
 });

@@ -3,12 +3,12 @@
  * Niv Netanel - 208540302
  */
 // validDay, validMonth and validYear are objects that define the validation criteria for day,
-validDay = { type: Number, min: 1, max: 31 };
-validMonth = { type: Number, min: 1, max: 12 };
-validYear = { type: Number, min: 1900, max: 2100 };
+const validDay = { type: Number, min: 1, max: 31 };
+const validMonth = { type: Number, min: 1, max: 12 };
+const validYear = { type: Number, min: 1900, max: 2100 };
 
 // enumCategory is an array of the possible categories for a cost.
-enumCategory = [
+const enumCategory = [
   "food",
   "housing",
   "health",
@@ -36,13 +36,13 @@ db.once("open", () => {
 
 // Creating schemas for the User, Costs and Reports collections.
 const usersSchema = new mongoose.Schema(
-  { userID: String, firstName: String, lastName: String, birthday: Date },
+  { id: String, first_name: String, last_name: String, birthday: Date },
   { versionKey: false }
 );
 
 const computedReportsSchema = new mongoose.Schema(
   {
-    userID: {
+    user_id: {
       type: Number,
       required: true,
     },
@@ -83,7 +83,7 @@ const computedReportsSchema = new mongoose.Schema(
 
 const costsSchema = new mongoose.Schema(
   {
-    userID: {
+    user_id: {
       type: Number,
       required: true,
     },
@@ -105,7 +105,7 @@ const costsSchema = new mongoose.Schema(
       min: validYear.min,
       max: validYear.max,
     },
-    userID: {
+    id: {
       type: String,
       unique: true,
       default: () => {
@@ -136,16 +136,16 @@ const Report = mongoose.model("Report", computedReportsSchema);
 
 // Create a new User instance
 const user = new User({
-  userID: "123123",
-  firstName: "Moshe",
-  lastName: "Israeli",
+  id: "123123",
+  first_name: "moshe",
+  last_name: "israeli",
   birthday: new Date(1990, 1, 10),
 });
 
 // Function to create a new User if they do not already exist
 async function createUserIfNotExist(user) {
   // Check if a User with the same ID already exists
-  const existUser = await User.findOne({ userID: user.userID });
+  const existUser = await User.findOne({ id: user.id });
   // Create the new User if they do not already exist
   if (existUser === null) {
     const newUser = await User.create(user);
@@ -167,7 +167,7 @@ async function createNewCost(
   costSum
 ) {
   const cost = new Cost({
-    userID: costUserId,
+    user_id: costUserId,
     day: costDay,
     month: costMonth,
     year: costYear,
@@ -188,7 +188,7 @@ async function createNewReport(
   reportSum
 ) {
   const report = new Report({
-    userID: reportUserId,
+    user_id: reportUserId,
     day: reportDay,
     month: reportMonth,
     year: reportYear,
@@ -199,4 +199,11 @@ async function createNewReport(
   await Report.create(report);
 }
 // Export the three models and two functions as a module
-module.exports = { createNewCost, createNewReport, Cost, Report };
+module.exports = {
+  createNewCost,
+  createNewReport,
+  Cost,
+  Report,
+  enumCategory,
+  User,
+};

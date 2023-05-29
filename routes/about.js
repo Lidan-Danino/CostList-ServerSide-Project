@@ -7,14 +7,14 @@ function developersDetails() {
   // Define an array of developer objects
   const developers = [
     {
-      firstName: "Lidan",
-      lastName: "Danino",
+      firstname: "lidan",
+      lastname: "danino",
       id: "207599473",
       email: "lidan05463@gmail.com",
     },
     {
-      firstName: "Niv",
-      lastName: "Netanel",
+      firstname: "niv",
+      lastname: "netanel",
       id: "208540302",
       email: "nivnetanel@gmail.com",
     },
