@@ -15,14 +15,7 @@ const indexRouter = require("./routes/index");
 const aboutRouter = require("./routes/about");
 
 // Importing the required models and functions from the database module
-const {
-  createNewCost,
-  createNewReport,
-  Cost,
-  Report,
-  enumCategory,
-  User,
-} = require("./models/database");
+const { createNewCost, createNewReport, Cost, Report, enumCategory, User } = require("./models/database");
 
 // Initializing the express app
 const app = express();
@@ -56,40 +49,30 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 
 // Route for adding new costs
-app.use("/addcost/", function (req, res) {
-  // Wrapping the add cost logic in a Promise
-  new Promise(async (resolve, reject) => {
-    try {
-      const category = req.body.category;
-      // Check if the category is valid
-      if (!enumCategory.includes(category)) {
-        throw new Error("Invalid category");
-      }
-      const user_id = req.body.user_id;
-      const existingUser = await User.findOne({ id: user_id });
-      if (!existingUser) {
-        throw new Error("User does not exist");
-      }
-
-      // Calling the createNewCost function to add a new cost
-      await createNewCost(
-        req.body.user_id,
-        req.body.day,
-        req.body.month,
-        req.body.year,
-        req.body.description,
-        req.body.category,
-        req.body.sum
-      );
-      // Resolving the promise with a success message
-      resolve("Cost added successfully");
-    } catch (e) {
-      // Rejecting the promise with an error message
-      reject(e.message);
+app.use("/addcost/", async function (req, res) {
+  try {
+    const category = req.body.category;
+    // Check if the category is valid
+    if (!enumCategory.includes(category)) {
+      throw new Error("Invalid category");
     }
-  })
-    .then((message) => res.json({ message }))
-    .catch((error) => res.status(400).json({ error }));
+    const user_id = req.body.user_id;
+    const existingUser = await User.findOne({ id: user_id });
+    if (!existingUser) {
+      throw new Error("User does not exist");
+    }
+
+    // Calling the createNewCost function to add a new cost
+    const newCost = await createNewCost(req.body.user_id, req.body.day, req.body.month, req.body.year, req.body.description, req.body.category, req.body.sum);
+
+    // Fetch the inserted cost document from the database
+    const insertedCost = await Cost.findById(newCost._id);
+
+    // Send the inserted cost document as the response
+    res.json(insertedCost);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Route for getting the developers details
