@@ -9,13 +9,13 @@ function developersDetails() {
     {
       firstname: "lidan",
       lastname: "danino",
-      id: "207599473",
+      id: 207599473,
       email: "lidan05463@gmail.com",
     },
     {
       firstname: "niv",
       lastname: "netanel",
-      id: "208540302",
+      id: 208540302,
       email: "nivnetanel@gmail.com",
     },
   ];

@@ -2,6 +2,7 @@
  * Lidan Danino - 207599473
  * Niv Netanel - 208540302
  */
+
 // validDay, validMonth and validYear are objects that define the validation criteria for day,
 const validDay = { type: Number, min: 1, max: 31 };
 const validMonth = { type: Number, min: 1, max: 12 };
@@ -26,7 +27,7 @@ db.once("open", () => {
 });
 
 // Creating schemas for the User, Costs and Reports collections.
-const usersSchema = new mongoose.Schema({ id: String, first_name: String, last_name: String, birthday: Date }, { versionKey: false });
+const usersSchema = new mongoose.Schema({ id: Number, first_name: String, last_name: String, birthday: Date }, { versionKey: false });
 
 const computedReportsSchema = new mongoose.Schema(
   {
@@ -124,7 +125,7 @@ const Report = mongoose.model("Report", computedReportsSchema);
 
 // Create a new User instance
 const user = new User({
-  id: "123123",
+  id: 123123,
   first_name: "moshe",
   last_name: "israeli",
   birthday: new Date(1990, 1, 10),
@@ -133,12 +134,12 @@ const user = new User({
 // Function to create a new User if they do not already exist
 async function createUserIfNotExist(user) {
   // Check if a User with the same ID already exists
-  const existUser = await User.findOne({ id: user.id });
-  // Create the new User if they do not already exist
-  if (existUser === null) {
-    const newUser = await User.create(user);
-    return newUser;
+  let existUser = await User.findOne({ id: user.id });
+  // If the user does not exist, create a new User
+  if (!existUser) {
+    existUser = await User.create(user);
   }
+  return existUser;
 }
 
 // Call the createUserIfNotExist function and log the result to the console

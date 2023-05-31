@@ -2,6 +2,7 @@
  * Lidan Danino - 207599473
  * Niv Netanel - 208540302
  */
+
 const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
@@ -39,16 +40,15 @@ const resultArray = {
 };
 
 // Middleware setup
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(logger("dev")); // setup logger middleware for logging HTTP requests
+app.use(express.json()); // use express.json middleware for parsing JSON request bodies
+app.use(express.urlencoded({ extended: false })); // use express.urlencoded middleware for parsing URL-encoded bodies
+app.use(cookieParser()); // setup cookie-parser middleware for parsing cookie headers and populating req.cookies
+app.use(express.static(path.join(__dirname, "public"))); // setup express.static middleware to serve static files from the public directory
 
 // Router setup
 app.use("/", indexRouter);
 
-// Route for adding new costs
 // Route for adding new costs
 app.use("/addcost/", function (req, res) {
   // Wrapping the add cost logic in a Promise
@@ -89,6 +89,13 @@ app.use("/report/", async function (req, res, next) {
     let q = req.url.split("?"),
       result = {};
     splitUrl(q, result);
+
+    const user_id = result.user_id;
+    const existingUser = await User.findOne({ id: user_id });
+    if (!existingUser) {
+      return res.status(400).json({ error: "User does not exist" });
+    }
+
     let resultComputed = await Report.find({ user_id: result.user_id, month: result.month, year: result.year });
 
     if (resultComputed[0] != undefined) {
@@ -108,7 +115,7 @@ app.use("/report/", async function (req, res, next) {
         res.status(200).json(resultArray);
       } catch (err) {
         // Return error if invalid
-        res.status(500).json(`${err} Invalid request`);
+        res.status(500).json({ error: "Invalid date" });
       }
     }
   } catch (error) {
