@@ -8,21 +8,12 @@ const validMonth = { type: Number, min: 1, max: 12 };
 const validYear = { type: Number, min: 1900, max: 2100 };
 
 // enumCategory is an array of the possible categories for a cost.
-const enumCategory = [
-  "food",
-  "housing",
-  "health",
-  "sport",
-  "education",
-  "transportation",
-  "other",
-];
+const enumCategory = ["food", "housing", "health", "sport", "education", "transportation", "other"];
 
 let crypto = require("crypto");
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", true);
-const connection =
-  "mongodb+srv://lidan05463:lidan12345@cluster0.e1xynie.mongodb.net/FinalProject?retryWrites=true&w=majority";
+const connection = "mongodb+srv://lidan05463:lidan12345@cluster0.e1xynie.mongodb.net/FinalProject?retryWrites=true&w=majority";
 mongoose.connect(connection, { useNewUrlParser: true });
 const db = mongoose.connection;
 // Logging any errors that occur when connecting to the database.
@@ -35,10 +26,7 @@ db.once("open", () => {
 });
 
 // Creating schemas for the User, Costs and Reports collections.
-const usersSchema = new mongoose.Schema(
-  { id: String, first_name: String, last_name: String, birthday: Date },
-  { versionKey: false }
-);
+const usersSchema = new mongoose.Schema({ id: String, first_name: String, last_name: String, birthday: Date }, { versionKey: false });
 
 const computedReportsSchema = new mongoose.Schema(
   {
@@ -157,15 +145,7 @@ async function createUserIfNotExist(user) {
 createUserIfNotExist(user).then(console.log);
 
 // Function to create a new Cost
-async function createNewCost(
-  costUserId,
-  costDay,
-  costMonth,
-  costYear,
-  costDescription,
-  costCategory,
-  costSum
-) {
+async function createNewCost(costUserId, costDay, costMonth, costYear, costDescription, costCategory, costSum) {
   const cost = new Cost({
     user_id: costUserId,
     day: costDay,
@@ -175,18 +155,13 @@ async function createNewCost(
     category: costCategory,
     sum: costSum,
   });
-  await Cost.create(cost);
+
+  // Here is where we return the newly created cost
+  return await Cost.create(cost);
 }
+
 // Function to create a new Report
-async function createNewReport(
-  reportUserId,
-  reportDay,
-  reportMonth,
-  reportYear,
-  reportDescription,
-  reportCategory,
-  reportSum
-) {
+async function createNewReport(reportUserId, reportDay, reportMonth, reportYear, reportDescription, reportCategory, reportSum) {
   const report = new Report({
     user_id: reportUserId,
     day: reportDay,
