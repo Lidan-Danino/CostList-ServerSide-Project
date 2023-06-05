@@ -7,6 +7,7 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", true);
 
+<<<<<<< HEAD
 const connection = "mongodb+srv://lidan05463:lidan12345@cluster0.e1xynie.mongodb.net/FinalProject?retryWrites=true&w=majority";
 
 mongoose.connect(connection, { useNewUrlParser: true }).catch((error) => console.error("Error connecting to MongoDB Atlas:", error));
@@ -17,6 +18,20 @@ db.on("error", (error) => console.error("Error connecting to MongoDB Atlas:", er
 db.once("open", () => console.log("Successfully connected to MongoDB Atlas."));
 
 const enumCategory = ["food", "housing", "health", "sport", "education", "transportation", "other"];
+=======
+const connection =
+  "mongodb+srv://lidan05463:lidan12345@cluster0.e1xynie.mongodb.net/FinalProject?retryWrites=true&w=majority";
+
+const enumCategory = [
+  "food",
+  "housing",
+  "health",
+  "sport",
+  "education",
+  "transportation",
+  "other",
+];
+>>>>>>> 832ca080b66cb781b494e182c7fb0cc5e83acfe5
 
 const valid = {
   Day: { type: Number, min: 1, max: 31 },
@@ -35,7 +50,14 @@ const createSchemaFields = (additionalFields = {}) => ({
   ...additionalFields,
 });
 
+<<<<<<< HEAD
 const usersSchema = new mongoose.Schema({ id: Number, first_name: String, last_name: String, birthday: Date }, { versionKey: false });
+=======
+const usersSchema = new mongoose.Schema(
+  { id: Number, first_name: String, last_name: String, birthday: Date },
+  { versionKey: false }
+);
+>>>>>>> 832ca080b66cb781b494e182c7fb0cc5e83acfe5
 
 const computedReportsSchema = new mongoose.Schema(
   createSchemaFields({
@@ -86,6 +108,7 @@ const User = mongoose.model("User", usersSchema);
 const Cost = mongoose.model("Cost", costsSchema);
 const Report = mongoose.model("Report", computedReportsSchema);
 
+<<<<<<< HEAD
 const user = new User({
   id: 123123,
   first_name: "moshe",
@@ -111,6 +134,49 @@ async function createNewCost(costData) {
 async function createNewReport(reportData) {
   return await createNewEntry(Report, reportData);
 }
+=======
+const createUserIfNotExist = async (user) => {
+  return User.findOne({ id: user.id }) || User.create(user);
+};
+
+const createNewEntry = async (Model, data) => {
+  const entry = new Model(data);
+  return await Model.create(entry);
+};
+
+async function createNewCost(costData) {
+  return await createNewEntry(Cost, costData);
+}
+
+async function createNewReport(reportData) {
+  return await createNewEntry(Report, reportData);
+}
+
+mongoose
+  .connect(connection, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Successfully connected to MongoDB Atlas.");
+
+    const user = new User({
+      id: 123123,
+      first_name: "moshe",
+      last_name: "israeli",
+      birthday: new Date(1990, 1, 10),
+    });
+
+    createUserIfNotExist(user).then(console.log);
+  })
+  .catch((error) => console.error("Error connecting to MongoDB Atlas:", error));
+
+const db = mongoose.connection;
+
+db.on("error", (error) =>
+  console.error("Error connecting to MongoDB Atlas:", error)
+);
+>>>>>>> 832ca080b66cb781b494e182c7fb0cc5e83acfe5
 
 module.exports = {
   createNewCost,
