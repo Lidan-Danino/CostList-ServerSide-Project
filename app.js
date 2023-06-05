@@ -2,6 +2,7 @@
  * Lidan Danino - 207599473
  * Niv Netanel - 208540302
  */
+
 const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
@@ -15,14 +16,7 @@ const indexRouter = require("./routes/index");
 const aboutRouter = require("./routes/about");
 
 // Importing the required models and functions from the database module
-const {
-  createNewCost,
-  createNewReport,
-  Cost,
-  Report,
-  enumCategory,
-  User,
-} = require("./models/database");
+const { createNewCost, createNewReport, Cost, Report, enumCategory, User } = require("./models/database");
 
 // Initializing the express app
 const app = express();
@@ -46,11 +40,11 @@ const resultArray = {
 };
 
 // Middleware setup
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(logger("dev")); // setup logger middleware for logging HTTP requests
+app.use(express.json()); // use express.json middleware for parsing JSON request bodies
+app.use(express.urlencoded({ extended: false })); // use express.urlencoded middleware for parsing URL-encoded bodies
+app.use(cookieParser()); // setup cookie-parser middleware for parsing cookie headers and populating req.cookies
+app.use(express.static(path.join(__dirname, "public"))); // setup express.static middleware to serve static files from the public directory
 
 // Router setup
 app.use("/", indexRouter);
@@ -72,23 +66,15 @@ app.use("/addcost/", function (req, res) {
       }
 
       // Calling the createNewCost function to add a new cost
-      await createNewCost(
-        req.body.user_id,
-        req.body.day,
-        req.body.month,
-        req.body.year,
-        req.body.description,
-        req.body.category,
-        req.body.sum
-      );
-      // Resolving the promise with a success message
-      resolve("Cost added successfully");
+      const newCost = await createNewCost(req.body.user_id, req.body.day, req.body.month, req.body.year, req.body.description, req.body.category, req.body.sum);
+      // Resolving the promise with the new cost
+      resolve(newCost);
     } catch (e) {
       // Rejecting the promise with an error message
       reject(e.message);
     }
   })
-    .then((message) => res.json({ message }))
+    .then((newCost) => res.json(newCost)) // Sending the new cost as a response
     .catch((error) => res.status(400).json({ error }));
 });
 
@@ -98,53 +84,79 @@ app.use("/about/", function (req, res) {
   res.send(developersDetails());
 });
 
-app.use("/report/", function (req, res) {
-  new Promise(async (resolve, reject) => {
+app.use("/report/", async function (req, res, next) {
+  try {
     let q = req.url.split("?"),
       result = {};
     splitUrl(q, result);
-    let resultComputed = await Report.find({
-      user_id: result.user_id,
-      month: result.month,
-      year: result.year,
-    });
-    // Check if a report with the given parameters exists
+
+    const user_id = result.user_id;
+    const existingUser = await User.findOne({ id: user_id });
+    if (!existingUser) {
+      return res.status(400).json({ error: "User does not exist" });
+    }
+
+    let resultComputed = await Report.find({ user_id: result.user_id, month: result.month, year: result.year });
+
     if (resultComputed[0] != undefined) {
       console.log("Computed result");
-      resultComputed.map((doc) =>
-        resultArray[doc.category].push({
-          day: doc.day,
-          description: doc.description,
-          sum: doc.sum,
-        })
-      );
-      resolve({ resultArray });
+      resultComputed.map((doc) => resultArray[doc.category].push({ day: doc.day, description: doc.description, sum: doc.sum }));
+      res.status(200).json(resultArray);
     } else {
-      let resultMatch = await Cost.find({
-        user_id: result.user_id,
-        month: result.month,
-        year: result.year,
-      });
-      // Check if a cost with the given parameters exists
-      if (resultMatch[0] != undefined) {
-        console.log("Match result");
-        resultMatch.map((doc) =>
-          resultArray[doc.category].push({
-            day: doc.day,
-            description: doc.description,
-            sum: doc.sum,
-          })
-        );
-        resolve({ resultArray });
-      } else {
-        console.log("Empty result");
-        resolve({ resultArray });
+      let resultMatch = await Cost.find({ user_id: result.user_id, month: result.month, year: result.year });
+      resultMatch.map((doc) => resultArray[doc.category].push({ day: doc.day, description: doc.description, sum: doc.sum }));
+
+      try {
+        monthValidate(result.month);
+        yearValidate(result.year);
+        resultMatch.map((doc) => {
+          createNewReport(doc.user_id, doc.day, doc.month, doc.year, doc.description, doc.category, doc.sum);
+        });
+        res.status(200).json(resultArray);
+      } catch (err) {
+        // Return error if invalid
+        res.status(500).json({ error: "Invalid date" });
       }
     }
-  })
-    .then((data) => res.json(data))
-    .catch((error) => res.status(400).json({ error }));
+  } catch (error) {
+    next(error);
+  } finally {
+    clearArrays();
+  }
 });
+
+// Function to split the URL
+function splitUrl(url, result) {
+  if (url.length >= 2) {
+    // Split the URL by '&' and add each parameter to the result object
+    url[1].split("&").forEach((item) => {
+      try {
+        result[item.split("=")[0]] = item.split("=")[1];
+      } catch (e) {
+        result[item.split("=")[0]] = "";
+      }
+    });
+  }
+}
+
+function monthValidate(currentMonth) {
+  if (!(currentMonth >= 1 && currentMonth <= 12)) {
+    throw new Error("Month not valid");
+  }
+}
+
+// Function to validate the year
+function yearValidate(currentYear) {
+  if (!(currentYear >= 1900 && currentYear <= 2100)) {
+    throw new Error("Year not valid");
+  }
+}
+
+function clearArrays() {
+  for (const array in resultArray) {
+    resultArray[array].length = 0;
+  }
+}
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {
