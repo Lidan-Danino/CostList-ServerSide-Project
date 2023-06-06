@@ -7,6 +7,7 @@
 const validDay = { type: Number, min: 1, max: 31 };
 const validMonth = { type: Number, min: 1, max: 12 };
 const validYear = { type: Number, min: 1900, max: 2100 };
+const connection = "mongodb+srv://lidan05463:lidan12345@cluster0.e1xynie.mongodb.net/FinalProject?retryWrites=true&w=majority";
 
 // enumCategory is an array of the possible categories for a cost.
 const enumCategory = ["food", "housing", "health", "sport", "education", "transportation", "other"];
@@ -14,7 +15,6 @@ const enumCategory = ["food", "housing", "health", "sport", "education", "transp
 let crypto = require("crypto");
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", true);
-const connection = "mongodb+srv://lidan05463:lidan12345@cluster0.e1xynie.mongodb.net/FinalProject?retryWrites=true&w=majority";
 mongoose.connect(connection, { useNewUrlParser: true });
 const db = mongoose.connection;
 // Logging any errors that occur when connecting to the database.
