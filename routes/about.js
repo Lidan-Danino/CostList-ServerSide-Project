@@ -2,6 +2,7 @@
  * Lidan Danino - 207599473
  * Niv Netanel - 208540302
  */
+
 // Define the function developersDetails
 function developersDetails() {
   // Define an array of developer objects
